@@ -1,0 +1,39 @@
+repository:
+  name: action-grafana-dashboards-deploy
+  description: Github Action to deploy Grafana dashboards
+  private: false
+  default_branch: master
+  has_issues: true
+  has_projects: false
+  has_wiki: false
+  has_downloads: true
+  allow_squash_merge: true
+  allow_merge_commit: true
+  allow_rebase_merge: true
+  delete_branch_on_merge: true
+
+teams:
+  - name: platform
+    permission: maintain
+  - name: write
+    permission: push
+
+branches:
+  - name: master
+    protection:
+      required_pull_request_reviews:
+        required_approving_review_count: 1
+        dismiss_stale_reviews: true
+        require_code_owner_reviews: true
+        dismissal_restrictions:
+          users: []
+          teams: []
+      required_status_checks:
+        strict: false
+        contexts: []
+      enforce_admins: false
+      restrictions:
+        users: []
+        teams:
+          - platform
+          - write
