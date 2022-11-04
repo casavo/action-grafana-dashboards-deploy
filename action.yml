@@ -1,0 +1,51 @@
+name: Grafana Dashboards Deploy
+description: Deploys Grafana dashboards
+author: casavo
+branding:
+  icon: anchor
+  color: gray-dark
+inputs:
+  endpoint:
+    description: Grafana endpoint ({proto}://{host} format, required)
+    required: true
+  api-key:
+    description: Grafana API Key (required)
+    required: true
+  folder:
+    description: Grafana folder name where to store the dashboard (required)
+    required: true
+  path:
+    description: Local path containing dashboards' json files
+    required: false
+    default: dashboards
+  message:
+    description: Commit message for version history
+    required: false
+
+runs:
+  using: composite
+  steps:
+    - uses: gi0baro/setup-noir@v1
+    - name: Deploy
+      shell: bash
+      run: |
+        set -eou pipefail
+
+        _auth_header="Authorization: Bearer ${{ inputs.api-key }}"
+        _api_folders="${{ inputs.endpoint }}/api/folders"
+        _api_dashboards="${{ inputs.endpoint }}/api/dashboards/db"
+
+        if [ -z "${{ inputs.message }}" ]; then
+          msg="Update from ${{ github.repository }}@${{ github.sha }}"
+        else
+          msg="${{ inputs.message }}"
+        fi
+
+        folder_uid=$(curl -sfL -H "$_auth_header" $_api_folders | jq -r '.[] | select(.title=="${{ inputs.folder }}") | .uid')
+        echo "Found UID $folder_uid for folder ${{ inputs.folder }}"
+
+        for dsb_file in $(ls ${{ inputs.path }}/*.json ); do
+          echo "Publishing dashboard for file $dsb_file"
+          noir -c dashboard:$dsb_file -v folder=$folder_uid -v "message=$msg" ${{ github.action_path }}/dashboard.tpl | \
+            curl -sfL -X POST -H "$_auth_header" -H 'Content-Type: application/json' $_api_dashboards -d @-
+        done
