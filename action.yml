@@ -25,7 +25,11 @@ inputs:
 runs:
   using: composite
   steps:
-    - uses: gi0baro/setup-noir@v1
+    - name: install gi0baro/noir
+      shell: bash
+      run: |
+        curl -sSL https://github.com/gi0baro/noir/releases/download/0.6.1/noir-0.6.1-linux-aarch64.tar.gz | tar xz &&
+        sudo chmod +x noir && sudo mv noir /usr/bin
     - name: Deploy
       shell: bash
       run: |
